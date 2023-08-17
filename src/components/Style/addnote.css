@@ -1,0 +1,62 @@
+.addnote_container{
+    width: 100%;
+    max-width: 1300px;
+    margin: 1em auto;
+   
+    background-color: #F5F5F5;
+    padding: .5em 2em;
+}
+.editnote_container{
+    width: 100%;
+    max-width: 1300px;
+    margin: 1em auto;
+    
+    background-color: #F5F5F5;
+    padding: .5em 2em;
+}
+.addnote_container h1 , h3{
+    text-align: left;
+}
+
+.title_div , .tag_div{
+    width: 100%;
+    resize: none;
+    
+}
+.input{
+    width: 100%;
+    padding: .5em;
+}
+ textarea{
+    width: 100%;
+    resize: none;
+    padding: .5em;
+}
+#description{
+    padding: 1em;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.title_div input{
+   text-transform: uppercase;
+    height: auto;
+    overflow-wrap: break-word;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+.edit_Note{
+    border: 2px solid black;
+}
+.submit_btn{
+    text-align: left;
+    border: none;
+    background-color: rgb(109, 109, 243);
+    padding: .4em;
+    border-radius: 5px;
+    color: white;
+}
+@media (min-width:700px){
+    .title_tag_container{
+    display: flex;  
+    gap: 1em;
+}
+
+}

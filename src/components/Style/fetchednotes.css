@@ -1,0 +1,40 @@
+.fetchednotes_container{
+    display: flex;
+    width: 100%;
+    padding: 1em;
+    margin: 1em auto;
+    max-width: 1300px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.fetched_element{
+    margin: .5em;
+    width: 100%;
+    padding: .5em;
+    text-align: center;
+    border-radius: 10px;
+    background-color: rgb(246, 246, 139);
+}
+.img-btn{
+    text-align: right;
+    margin-right: 1em;
+}
+.img-btn img:hover{
+ cursor: pointer;
+}
+
+@media(min-width:600px){
+
+    .fetched_element{
+        width: 40%;
+    }
+
+}
+
+@media(min-width:1000px){
+
+    .fetched_element{
+        width: 30%;
+    }
+
+}
