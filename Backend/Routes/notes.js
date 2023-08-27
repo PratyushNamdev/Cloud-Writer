@@ -10,11 +10,11 @@ router.post(
   decodingToken,
   [
     body("title")
-      .isLength({ min: 3 })
+      .isLength({ min: 1 })
       .withMessage("The title should be a minimum of three letters"),
-    body("tag")
-      .isLength({ min: 3 })
-      .withMessage("The title should be a minimum of three letters"),
+    // body("tag")
+    //   .isLength({ min: 1 })
+    //   .withMessage("The title should be a minimum of three letters"),
   ],
   (req, res) => {
     const errors = validationResult(req);
@@ -46,8 +46,20 @@ router.post(
 //Route 2 to GET req to fetch all the notes from the database /api/notes/fetchnotes
 router.get("/fetchnotes", decodingToken, async (req, res) => {
   try {
-    const notes = await Notes.find({ user: req.user.id });
-    res.json(notes);
+    let page = 1;
+    if(parseInt(req.query.page) > 0){
+       page = parseInt(req.query.page);
+    }
+    
+    const limit = parseInt(req.query.limit) || 5;
+    const notes = await Notes.find({ user: req.user.id })
+    .skip((page-1)*limit)
+    .limit(limit)
+    .exec();
+    const totalNotes = await Notes.countDocuments({ user: req.user.id });
+    console.log(totalNotes);
+    console.log(notes);
+    res.json({ totalNotes , notes});
   } catch (error) {
     res.status(500).send({ error: "Some internal error occured" });
   }

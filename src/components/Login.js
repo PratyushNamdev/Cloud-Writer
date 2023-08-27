@@ -1,11 +1,14 @@
 import React, { useState , useContext, useEffect} from 'react'
 import AuthContext from './context/auth/AuthContext';
 import {Link , useNavigate } from 'react-router-dom';
-import './Style/login.css'
+import './Style/login.css';
+import Loading from './Loading';
+import NoteContext from './context/Notes-Context/NoteContext';
 export default function Login() {
     const navigate = useNavigate();
     const [credentials , setCredentials] = useState({email:"" , password : ""});
    const { login } = useContext(AuthContext);
+   const {isLoading} = useContext(NoteContext)
     const handleLogin = (e)=>{
         e.preventDefault()
         login(credentials.email , credentials.password);
@@ -23,6 +26,7 @@ export default function Login() {
     },[])
   return (
     <div>
+ {isLoading && <Loading/>}
       <form className='form_container' onSubmit={handleLogin}>
       <h3>Cloud writer - Login</h3>
         <div className='row_'><input placeholder='E-mail' type="email" name='email' value={credentials.email} onChange={handleChange}/></div>

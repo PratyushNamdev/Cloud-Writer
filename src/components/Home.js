@@ -3,15 +3,23 @@ import NoteContext from "./context/Notes-Context/NoteContext";
 import "./Style/fetchednotes.css";
 import AddNote from "./AddNote";
 import FetchedNotes from "./FetchedNotes";
-import Alert from "./Alert";
+import InfiniteScroll from "react-infinite-scroll-component";
 import { useNavigate } from "react-router-dom";
 import EditModel from "./EditModel";
-import AuthContext from "./context/auth/AuthContext";
+import Loading from "./Loading";
+
 export default function Home() {
-  const { notes, fetchNotes, alert , editModel , setEditModel  } = useContext(NoteContext);
-  const {userName} = useContext(AuthContext);
+  const {
+    notes,
+    fetchNotes,
+    editModel,
+    setEditModel,
+    totalNotes,
+    isLoading,
+  } = useContext(NoteContext);
+
   let navigate = useNavigate();
-  
+
   useEffect(() => {
     if (!localStorage.getItem("token")) {
       navigate("/login");
@@ -20,34 +28,36 @@ export default function Home() {
         fetchNotes();
       }
     }
-
     // eslint-disable-next-line
   }, []);
-  
+
   return (
     <>
-      <EditModel editModel={editModel} setEditModel = {setEditModel}></EditModel>
+      <EditModel editModel={editModel} setEditModel={setEditModel}></EditModel>
       <AddNote />
-      <Alert message={alert} />
-    
-      
-      
-      
+      {isLoading && <Loading />}
       {notes.length > 0 && (
         <h1
           style={{
             textAlign: "center",
           }}
         >
-          {userName}'s Notes
+          Your Notes
         </h1>
       )}
-
-      <div className="fetchednotes_container">
-        {notes.map((notes) => {
-          return <FetchedNotes key={notes._id} notes={notes} />;
-        })}
-      </div>
+      <InfiniteScroll
+        dataLength={notes.length}
+        next={fetchNotes}
+        hasMore={totalNotes !== notes.length}
+        Loader={<h1>Loading........</h1>}
+        inverse={false}
+      >
+        <div className="fetchednotes_container">
+          {notes.map((notes) => {
+            return <FetchedNotes key={notes._id} notes={notes} />;
+          })}
+        </div>
+      </InfiniteScroll>
     </>
   );
 }

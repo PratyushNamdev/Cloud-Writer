@@ -1,11 +1,48 @@
 const express = require("express");
 const router = express.Router();
 const User = require("../Models/User");
+const otpModel = require("../Models/OtpVerification");
 const { body, validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const jwtKey = "thisisout$oken";
 const decodingToken = require("../Middleware/decodingToken");
+const nodemailer = require("nodemailer");
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  auth: {
+    user: "pratyushnamdev140@gmail.com",
+    pass: "qwrawyscpgganeod",
+  },
+});
+const sendOTPverificationEmail = async (_id, email, res) => {
+  try {
+    const otp = `${Math.floor(1000 + Math.random() * 9000)}`;
+    const mailOptions = {
+      from: "pratyushnamdev140@gmail.com",
+      to: email,
+      subject: "Verify yout E-mail",
+      html: `<p>Enter ${otp} in the app to verify</p>`,
+    };
+    const salt = await bcrypt.genSalt(10);
+    const hashOTP = await bcrypt.hash(otp, salt);
+    await otpModel.create({
+      userId: _id,
+      otp: hashOTP,
+      createdAt: Date.now(),
+      expiresOn: Date.now() + 360000,
+    });
+    // console.log(otp1)
+    // console.log(mailOptions)
+    await transporter.sendMail(mailOptions).then(() => {
+      res.json({ needVerificationstatus: true, id: _id });
+    });
+  } catch (error) {
+    res.json({status:false , id:null})
+  }
+};
+
 //this is the signup route
 router.post(
   "/signup",
@@ -31,22 +68,24 @@ router.post(
       const salt = await bcrypt.genSalt(10);
       //hashing the password
       const secPass = await bcrypt.hash(req.body.password, salt);
-      user = await User.create({
+      await User.create({
         name: req.body.name,
         email: req.body.email,
         password: secPass,
+      }).then((user) => {
+        sendOTPverificationEmail(user._id, user.email, res);
       });
-      //The payload of the jwt
-      const data = {
-        user: {
-          id: user.id,
-        },
-      };
-      //creating the token
-      let authToken = jwt.sign(data, jwtKey);
-      res.json({ authToken , user });
+      // //The payload of the jwt
+      // const data = {
+      //   user: {
+      //     id: user.id,
+      //   },
+      // };
+      // //creating the token
+      // let authToken = jwt.sign(data, jwtKey);
+      // res.json({ authToken , user });
     } catch (err) {
-      console.log(err);
+      
       res.status(400).send({ error: "Some Errored Occured" });
     }
   }
@@ -65,7 +104,13 @@ router.post(
     try {
       let user = await User.findOne({ email });
       if (!user) {
-        return res.status(400).send({ error: "Enter valid credentials ..." });
+        return res.status(400).send({ error: "sign up required" });
+      }
+      if(!user.verified){
+     
+        await otpModel.deleteMany({userId : user._id})
+        return sendOTPverificationEmail(user._id , user.email , res);
+        
       }
       //checking the password
       let check = await bcrypt.compare(password, user.password);
@@ -78,7 +123,7 @@ router.post(
         },
       };
       let authToken = jwt.sign(data, jwtKey);
-      res.json({ authToken  , user});
+      res.json({ authToken, user , needVerificationstatus:false});
     } catch (err) {
       console.log(err);
       res.status(500).send({ error: "Some Errored Occured" });
@@ -97,4 +142,39 @@ router.post("/getuser", decodingToken, async (req, res) => {
   }
 });
 
+router.post("/verifyOTP", async (req, res) => {
+  try {
+    const { userId, otp } = req.body;
+    console.log(userId  , otp)
+    if (!userId || !otp) {
+      return res.json({ error: "Invalid request" });
+    }
+
+    let otpRecord = await otpModel.findOne({ userId });
+    
+    if (!otpRecord) {
+      return res.json({
+        error: "Email is already verified or not exist try by singin up again",
+      });
+    }
+    if(otpRecord.expiresOn < Date.now()){
+     
+      await otpModel.deleteMany({userId});
+      return res.json({
+        error: "OTP expired",
+      }); 
+    }
+    const validOTP = await bcrypt.compare(otp , otpRecord.otp)
+    if(!validOTP){
+      return res.json({
+        error: "Incorrect OTP"
+      }); 
+    }
+    await User.updateOne({_id:userId} , {verified:true})
+    await otpModel.deleteMany({userId});
+    res.json({status:true})
+  } catch (e) {
+    res.json({status : false})
+  }
+});
 module.exports = router;
